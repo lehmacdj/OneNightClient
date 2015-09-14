@@ -27,7 +27,7 @@ import roles.Role;
  * Displays the content for a game of One Night Ultimate Werewolf.
  * @author devin
  */
-public class OneNightWindow implements Runnable {
+public class OneNightWindow {
 	
 	private final String HOST = "localhost"; //the host that the client tries to connect to
 	private final int PORT = 9100; //the port that the client tries to connect to
@@ -73,8 +73,6 @@ public class OneNightWindow implements Runnable {
 		roles = new ArrayList<>();
 		stringToPlayerCard = new HashMap<>();
 		
-		running = true;
-		
 		//configure the JFrame
 		frame = new JFrame();
 		frame.setTitle("One Night");
@@ -86,40 +84,34 @@ public class OneNightWindow implements Runnable {
 	
 	//updates the window based on the information in this object
 	private void updateWindow() {
-		StringBuilder text = new StringBuilder();
-		String playerList = players.stream()
-				.map(p->p.getName())
-				.collect(Collectors.joining("</li><li>", "Players:<ul><li>", "</li></ul>"));
-		String roleList = roles.stream()
-				.map(r->r.getName())
-				.collect(Collectors.joining("</li><li>", "Roles:<ul><li>", "</li></ul>"));
-		text.append("<p>");
-		text.append(playerList);
-		text.append("</p>");
-		text.append(roleList);
-		text.append("</p>");
-		label.setText(text.toString());
+		System.out.println("Test");
 	}
 	
-	public void run() {
+	public void createAndShowGUI() {
+				
+		System.out.println("Hello");
 		
 		SwingUtilities.invokeLater(() -> {
 			frame.setVisible(true);
-			
-			//run updateWindow() every 40 ms.
-			new Timer(40, new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					updateWindow();
-				}
-			}).start();
 		});
+	
+		Timer timer = new Timer(40, new ActionListener() {
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                updateWindow();
+            }
+		});
+		timer.start();
+		
+		running = true;
+
 		Scanner scan = new Scanner(System.in);
 		while (running) {
 			readFromServer();
 			out.println(uuid + " " + scan.nextLine());
 		}
 		scan.close();
+
 	}
 	
 	private void readFromServer() {
@@ -195,7 +187,7 @@ public class OneNightWindow implements Runnable {
         }
         parse.close();
         
-        //Return the card location based on the args array
+        //Return the card location based on the  array
         if (args.get(0).equals("C")) {
             int index = Integer.parseInt(args.get(1));
             return centerCards.get(index);
