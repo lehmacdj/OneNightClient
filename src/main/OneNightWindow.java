@@ -1,7 +1,5 @@
 package main;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,10 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
@@ -33,17 +29,18 @@ public class OneNightWindow {
 	private final int PORT = 9100; //the port that the client tries to connect to
 	private final Socket socket; //the Socket representing the players connection to the server
 	private UUID uuid; //the players UUID; should not be null after initialization
-
-	private List<CenterCard> centerCards;
-	private List<PlayerCard> players; //the players that are playing the game; the client should always be at index 0
+	private String name;
+	
+	private int playerCount;
+	private List<Role> centerCards;
 	private List<Role> roles; //all of the roles in the game
-	private Map<String, PlayerCard> stringToPlayerCard;
+	private Map<String, Player> players; // the players.  The key is the name, the value is the role
 
 	private JFrame frame;
 	private final int HEIGHT =  720;
-	private final int WIDTH  = 1280;
-	
-	private JLabel label;
+	private final int WIDTH  = 720;
+
+	private PlayArea playArea;
 	
 	private boolean running; // true while the window is running
 	
@@ -66,58 +63,57 @@ public class OneNightWindow {
 		out = new PrintWriter(socket.getOutputStream(), true);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
+		
 		//initialize some fields
 		centerCards = new ArrayList<>();
 		for (int i = 0; i < 3; i++) centerCards.add(null);
-		players = new ArrayList<>();
 		roles = new ArrayList<>();
-		stringToPlayerCard = new HashMap<>();
+		players = new HashMap<>();
+		
+		readFromServer();
 		
 		//configure the JFrame
 		frame = new JFrame();
 		frame.setTitle("One Night");
+		
 		frame.setSize(WIDTH, HEIGHT);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		label = new JLabel();
-		frame.getContentPane().add(label);
+		
+		playArea = new PlayArea(playerCount);
+		
+		frame.add(playArea);
 	}
-	
+
 	//updates the window based on the information in this object
 	private void updateWindow() {
-		System.out.println("Test");
+		for (Map.Entry<String, Player> e : players.entrySet()) {
+			PlayerPanel panel = playArea.get(e.getValue().getIndex());
+			panel.setPlayerName(e.getKey());
+			panel.setRole(e.getValue().getRole() + "");
+		}
 	}
 	
 	public void createAndShowGUI() {
-				
-		System.out.println("Hello");
-		
-		SwingUtilities.invokeLater(() -> {
-			frame.setVisible(true);
-		});
-	
-		Timer timer = new Timer(40, new ActionListener() {
-			@Override
-            public void actionPerformed(ActionEvent e) {
-                updateWindow();
-            }
-		});
+
+		SwingUtilities.invokeLater(() -> frame.setVisible(true));
+
+		Timer timer = new Timer(40, ae -> updateWindow());
 		timer.start();
 		
 		running = true;
 
-		Scanner scan = new Scanner(System.in);
+		Scanner ui = new Scanner(System.in);
 		while (running) {
+			out.println(uuid + " " + ui.nextLine());
 			readFromServer();
-			out.println(uuid + " " + scan.nextLine());
 		}
-		scan.close();
-
+		ui.close();
 	}
-	
+
 	private void readFromServer() {
-		String fromServer;
 		try {
-			while (!(fromServer = in.readLine()).equals(">>>")) {
+			String fromServer = in.readLine();
+			while (!fromServer.equals(">>>")) {
 				
 				System.out.println(fromServer);
 				
@@ -126,96 +122,66 @@ public class OneNightWindow {
 				List<String> args = new ArrayList<>();
 				parse.useDelimiter("=");
 				parse.forEachRemaining((s) -> {
-					args.add(s);
+					args.add(s.trim());
 				});
 				parse.close();
 				
-				switch (args.get(0)) {
+				String keyword = args.get(0);
 				
-				case "uuid":
+				if (keyword.equals("uuid")) {
 					uuid = UUID.fromString(args.get(1));
-					break;
-					
-				case "set":
-					Scanner setgen = new Scanner(args.get(1));
-					setgen.useDelimiter(",");
-					setgen.forEachRemaining((s) -> {
+				} else if (keyword.equals("set")) {
+					Scanner make = new Scanner(args.get(1));
+					make.useDelimiter(",");
+					make.forEachRemaining((s) -> {
 						roles.add(Registry.getInstance().roleFromString(s));
 					});
-					setgen.close();
-					break;
-				
-				case "role":
-					Role role1 = Registry.getInstance().roleFromString(args.get(1));
-					players.get(0).setRole(role1);
-					break;
-					
-				case "players":
-					Scanner playerListifier = new Scanner(args.get(1));
-					playerListifier.useDelimiter(",");
-					playerListifier.forEachRemaining((s) -> {
-						players.add(new PlayerCard(s, null));
-					});
-					playerListifier.close();
-					
-				//handles everything that needs more complex matching	
-				default:
-					
-					//for location information
-					if (args.get(0).matches(".+-.+")) {
-						CardLocation location = parsePosition(args.get(0));
-						Role role2 = Registry.getInstance().roleFromString(args.get(1));
-						location.setRole(role2);
+					make.close();
+				} else if (keyword.equals("count")) {
+					playerCount = Integer.parseInt(args.get(1));
+				} else if (keyword.equals("name")) {
+					name = args.get(1);
+				} else if (keyword.equals("role")) {
+					Role role = Registry.getInstance().roleFromString(args.get(1));
+					players.get(name).setRole(role);
+				} else if (keyword.equals("players")) {
+					Scanner names = new Scanner(args.get(1));
+					names.useDelimiter(",");
+					while (names.hasNext()) {
+						String n = names.next();
+						assert n != null;
+						players.put(n.trim(), new Player());
 					}
-					
-					
+					names.close();
+				} else if (keyword.matches(".+-.+")) {
+					Role role = Registry.getInstance().roleFromString(args.get(1));
+					setRole(keyword, role);
 				}
+				
+				fromServer = in.readLine();
 			}
 		} catch (IOException e) {
 			System.err.println("Failed to read from the server.");
 		}
 	}
-    
-	//pos i s in the form of C-[index] or P-[name]
-    private CardLocation parsePosition(String pos) {
-    	//parse the position into an ArrayList 
-    	Scanner parse = new Scanner(pos);
-        parse.useDelimiter("-");
-        ArrayList<String> args = new ArrayList<>();
-        while (parse.hasNext()) {
-        	args.add(parse.next().trim());
-        }
-        parse.close();
-        
-        //Return the card location based on the  array
-        if (args.get(0).equals("C")) {
-            int index = Integer.parseInt(args.get(1));
-            return centerCards.get(index);
-        } else {
-            String name = args.get(1);
-            return nameToPlayer(name);
-        }
-    }
-    
-    private PlayerCard nameToPlayer(String name) {
-    	return stringToPlayerCard.get(name);
-    }
-    
-    //TESTING
-    public static void main(String[] args) throws IOException {
-    	OneNightWindow window = new OneNightWindow();
-    	SwingUtilities.invokeLater(() -> {
-    		window.frame.setVisible(true);
-    	});
-    	window.readFromServer();
-    	Scanner in = new Scanner(System.in);
-    	window.out.println(window.uuid + " " + in.nextLine());
-    	window.readFromServer();
-    	String text = window.players.stream()
-    			.map(a->a.getName())
-    			.collect(Collectors.joining(", "));
-    	System.out.println(text);
-    	in.close();
-    }
+    	
+	private void setRole(String pos, Role role) {
+		//get the elements of the position into an ArrayList
+		Scanner parse = new Scanner(pos);
+		parse.useDelimiter("-");
+		List<String> args = new ArrayList<>();
+		parse.forEachRemaining((s) -> {
+			args.add(s.trim());
+		});
+		parse.close();
+		
+		//modify the role at the correct position
+		if (args.get(0).equals("C")) {
+			centerCards.set(Integer.parseInt(args.get(1)), role);
+		} else {
+			assert args.get(0).equals("P");
+			players.get(args.get(1)).setRole(role);
+		}
+	}
 	
 }
