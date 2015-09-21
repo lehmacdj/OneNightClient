@@ -1,5 +1,6 @@
 package main;
 
+import java.awt.BorderLayout;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,9 +39,10 @@ public class OneNightWindow {
 
 	private JFrame frame;
 	private final int HEIGHT =  720;
-	private final int WIDTH  = 720;
+	private final int WIDTH  = 1000;
 
 	private PlayArea playArea;
+	private SetList setList;
 	
 	private boolean running; // true while the window is running
 	
@@ -78,10 +80,16 @@ public class OneNightWindow {
 		
 		frame.setSize(WIDTH, HEIGHT);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		BorderLayout layout = new BorderLayout();
+		frame.setLayout(layout);
 		
 		playArea = new PlayArea(playerCount);
-		
+		layout.addLayoutComponent(playArea, BorderLayout.WEST);
 		frame.add(playArea);
+		
+		setList = new SetList(roles);
+		layout.addLayoutComponent(setList, BorderLayout.EAST);
+		frame.add(setList);
 	}
 
 	//updates the window based on the information in this object
@@ -134,7 +142,7 @@ public class OneNightWindow {
 					Scanner make = new Scanner(args.get(1));
 					make.useDelimiter(",");
 					make.forEachRemaining((s) -> {
-						roles.add(Registry.getInstance().roleFromString(s));
+						roles.add(Registry.getInstance().roleFromString(s.trim()));
 					});
 					make.close();
 				} else if (keyword.equals("count")) {

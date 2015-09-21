@@ -3,18 +3,17 @@ package main;
 import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
-import javax.swing.JLabel;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 public class PlayerPanel extends JPanel {
 	
-	private JLabel role;
+	private JButton role;
 	
 	public PlayerPanel() {
 		setLayout(new GridLayout(1, 3));
-		role = new JLabel();
-		role.setBorder(BorderFactory.createEtchedBorder());
+		role = new JButton();
 		add(role);
 		setBorder(BorderFactory.createTitledBorder("Unknown"));
 	}
