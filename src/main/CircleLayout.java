@@ -36,7 +36,7 @@ public class CircleLayout implements LayoutManager2 {
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
 		// TODO Auto-generated method stub
-		return new Dimension(720, 720);
+		return new Dimension(parent.getWidth(), parent.getHeight());
 	}
 
 	@Override
@@ -48,19 +48,23 @@ public class CircleLayout implements LayoutManager2 {
 	@Override
 	public void layoutContainer(Container parent) {
 		// TODO Auto-generated method stub
-		Point center = new Point(360, 360);
+		Point origin = new Point(parent.getWidth() / 2, parent.getHeight() / 2);
 		double angle = Math.toRadians(360./edge.size());
-		int radius = 260;
+		int radius = parent.getHeight() / 2 - 100;
 		int compEdge = 150;
 		for (int i = 0; i < edge.size(); i++) {
 			Component comp = edge.get(i);
 			double theta = i * angle;
 			int dx = (int) (radius * Math.sin(theta));
 			int dy = (int) (-radius * Math.cos(theta));
-			int x = center.x + dx - compEdge/2;
-			int y = center.y + dy - compEdge/2;
+			int x = origin.x + dx - compEdge/2;
+			int y = origin.y + dy - compEdge/2;
 			comp.setBounds(x, y, compEdge, compEdge);
 		}
+		Dimension centerSize = center.getPreferredSize();
+		int dx = (int) centerSize.getWidth()/2;
+		int dy = (int) centerSize.getHeight()/2;
+		center.setBounds(origin.x - dx, origin.y - dy, 2 * dx, 2 * dy);
 	}
 
 	@Override
@@ -80,7 +84,7 @@ public class CircleLayout implements LayoutManager2 {
 	@Override
 	public Dimension maximumLayoutSize(Container target) {
 		// TODO Auto-generated method stub
-		return new Dimension(720, 720);
+		return new Dimension(target.getWidth(), target.getHeight());
 	}
 
 	@Override
@@ -103,7 +107,7 @@ public class CircleLayout implements LayoutManager2 {
 	
 	
 	
-	enum Position {
+	private enum Position {
 		EDGE,
 		CENTER;
 	}

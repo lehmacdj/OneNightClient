@@ -1,5 +1,6 @@
 package main;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
@@ -13,9 +14,11 @@ public class PlayerPanel extends JPanel {
 	
 	public PlayerPanel() {
 		setLayout(new GridLayout(1, 3));
-		role = new JButton();
-		add(role);
+		setPreferredSize(new Dimension(150, 150));
 		setBorder(BorderFactory.createTitledBorder("Unknown"));
+		role = new JButton();
+		role.addActionListener(new ButtonListener(index++));
+		add(role);
 	}
 	
 	public void setPlayerName(String n) {
@@ -25,4 +28,7 @@ public class PlayerPanel extends JPanel {
 	public void setRole(String r) {
 		role.setText(r);
 	}
+	
+	private static int index;
+	
 }

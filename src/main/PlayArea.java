@@ -1,34 +1,40 @@
 package main;
 
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import roles.Role;
 
 @SuppressWarnings("serial")
 public class PlayArea extends JPanel {
 	
-	private List<PlayerPanel> panels;
+	private List<PlayerPanel> players;
+	private CenterArea centerArea;
 	
-	public PlayArea(int playerCount) {
-//		int gridSize = (int) Math.max(Math.ceil(Math.sqrt(playerCount)), 2);
-//		setLayout(new GridLayout(gridSize, gridSize));
+	public PlayArea(int playerCount, List<Role> roles, int dim) {
 		setLayout(new CircleLayout());
-		setPreferredSize(new Dimension(720, 720));
-		panels = new ArrayList<>();
+		setPreferredSize(new Dimension(dim, dim));
+		players = new ArrayList<>();
 		for (int i = 0; i < playerCount; i++) {
 			PlayerPanel panel = new PlayerPanel();
 			add(panel, CircleLayout.EDGE);
-			panels.add(panel);
+			players.add(panel);
 		}
+		
+		centerArea = new CenterArea(roles);
+		add(centerArea, CircleLayout.CENTER);
 		
 	}
 	
-	public PlayerPanel get(int i) {
-		return panels.get(i);
+	public PlayerPanel getPlayer(int i) {
+		return players.get(i);
+	}
+	
+	public PlayerPanel getCenter(int i) {
+		return centerArea.get(i);
 	}
 	
 }

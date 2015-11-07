@@ -14,6 +14,7 @@ import java.util.Scanner;
 import java.util.UUID;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
@@ -25,21 +26,12 @@ import roles.Role;
  * @author devin
  */
 public class OneNightWindow {
-	
-	private final String HOST = "localhost"; //the host that the client tries to connect to
-	private final int PORT = 9100; //the port that the client tries to connect to
-	private final Socket socket; //the Socket representing the players connection to the server
-	private UUID uuid; //the players UUID; should not be null after initialization
-	private String name;
-	
-	private int playerCount;
-	private List<Role> centerCards;
-	private List<Role> roles; //all of the roles in the game
-	private Map<String, Player> players; // the players.  The key is the name, the value is the role
 
+
+	//MARK: The Frame Code
 	private JFrame frame;
-	private final int HEIGHT =  720;
-	private final int WIDTH  = 1000;
+	private final int HEIGHT =  1000;
+	private final int WIDTH  = 1200;
 
 	private PlayArea playArea;
 	private SetList setList;
@@ -83,7 +75,7 @@ public class OneNightWindow {
 		BorderLayout layout = new BorderLayout();
 		frame.setLayout(layout);
 		
-		playArea = new PlayArea(playerCount);
+		playArea = new PlayArea(playerCount, roles, HEIGHT);
 		layout.addLayoutComponent(playArea, BorderLayout.WEST);
 		frame.add(playArea);
 		
@@ -95,29 +87,58 @@ public class OneNightWindow {
 	//updates the window based on the information in this object
 	private void updateWindow() {
 		for (Map.Entry<String, Player> e : players.entrySet()) {
-			PlayerPanel panel = playArea.get(e.getValue().getIndex());
+			PlayerPanel panel = playArea.getPlayer(e.getValue().getIndex());
 			panel.setPlayerName(e.getKey());
 			panel.setRole(e.getValue().getRole() + "");
+		}
+		for (int i = 0; i < centerCards.size(); i++) {
+			PlayerPanel panel = playArea.getCenter(i);
+			panel.setRole(centerCards.get(i) + "");
 		}
 	}
 	
 	public void createAndShowGUI() {
 
 		SwingUtilities.invokeLater(() -> frame.setVisible(true));
+		
+		//get the name from the client
+		String raw = JOptionPane.showInputDialog("Input your name");
+		if (!raw.contains(" "))
+			name = raw;
+		while (name == null) {
+			raw = JOptionPane.showInputDialog("Please try again. Names cannot contain spaces.");
+			if (!raw.contains(" ")) {
+				name = raw;
+			}
+		}
+		out.println(uuid + " ready " + name);
 
-		Timer timer = new Timer(40, ae -> updateWindow());
+		Timer timer = new Timer(100, ae -> updateWindow());
 		timer.start();
 		
 		running = true;
 
 		Scanner ui = new Scanner(System.in);
 		while (running) {
-			out.println(uuid + " " + ui.nextLine());
 			readFromServer();
+			out.println(uuid + " " + ui.nextLine());
 		}
 		ui.close();
 	}
 
+	//MARK: Data Source
+	
+	private final String HOST = "localhost"; //the host that the client tries to connect to
+	private final int PORT = 9100; //the port that the client tries to connect to
+	private final Socket socket; //the Socket representing the players connection to the server
+	private UUID uuid; //the players UUID; should not be null after initialization
+	private String name;
+	private int playerCount;
+	private List<Role> centerCards;
+	private List<Role> roles; //all of the roles in the game
+	private Map<String, Player> players; // the players.  The key is the name, the value is the role
+
+	
 	private void readFromServer() {
 		try {
 			String fromServer = in.readLine();
