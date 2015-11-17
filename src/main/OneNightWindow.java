@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,8 @@ public class OneNightWindow {
 
 	private PlayArea playArea;
 	private SetList setList;
+	
+	private List<Integer> signal;
 	
 	private boolean running; // true while the window is running
 	
@@ -66,6 +69,9 @@ public class OneNightWindow {
 		
 		readFromServer();
 		
+		//make a list to store the button state
+		signal = Collections.synchronizedList(new ArrayList<>(playerCount));
+		
 		//configure the JFrame
 		frame = new JFrame();
 		frame.setTitle("One Night");
@@ -75,7 +81,7 @@ public class OneNightWindow {
 		BorderLayout layout = new BorderLayout();
 		frame.setLayout(layout);
 		
-		playArea = new PlayArea(playerCount, roles, HEIGHT);
+		playArea = new PlayArea(playerCount, roles, HEIGHT, signal);
 		layout.addLayoutComponent(playArea, BorderLayout.WEST);
 		frame.add(playArea);
 		
@@ -87,12 +93,12 @@ public class OneNightWindow {
 	//updates the window based on the information in this object
 	private void updateWindow() {
 		for (Map.Entry<String, Player> e : players.entrySet()) {
-			PlayerPanel panel = playArea.getPlayer(e.getValue().getIndex());
+			Card panel = playArea.getPlayer(e.getValue().getIndex());
 			panel.setPlayerName(e.getKey());
 			panel.setRole(e.getValue().getRole() + "");
 		}
 		for (int i = 0; i < centerCards.size(); i++) {
-			PlayerPanel panel = playArea.getCenter(i);
+			Card panel = playArea.getCenter(i);
 			panel.setRole(centerCards.get(i) + "");
 		}
 	}

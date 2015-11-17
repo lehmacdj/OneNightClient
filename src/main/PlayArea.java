@@ -1,6 +1,7 @@
 package main;
 
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,32 +10,48 @@ import javax.swing.JPanel;
 import roles.Role;
 
 @SuppressWarnings("serial")
+/** Encapsulates the players and the center cards. */
 public class PlayArea extends JPanel {
 	
-	private List<PlayerPanel> players;
-	private CenterArea centerArea;
+	private List<Card> players;
+	private List<Card> centerCards;
 	
-	public PlayArea(int playerCount, List<Role> roles, int dim) {
+	/** Returns a play area representing the roles passed in with action listeners
+	 * for the buttons using the list, with dimensions of size by size. The player count is
+	 * given by playerCount */
+	public PlayArea(int playerCount, List<Role> roles, int size, List<Integer> list) {
 		setLayout(new CircleLayout());
-		setPreferredSize(new Dimension(dim, dim));
+		setPreferredSize(new Dimension(size, size));
+
+		// Initialize the players cards
 		players = new ArrayList<>();
 		for (int i = 0; i < playerCount; i++) {
-			PlayerPanel panel = new PlayerPanel();
+			Card panel = new Card(i, list);
 			add(panel, CircleLayout.EDGE);
 			players.add(panel);
 		}
 		
-		centerArea = new CenterArea(roles);
-		add(centerArea, CircleLayout.CENTER);
+		// Initialize the center area
+		centerCards = new ArrayList<>();
+		JPanel centers = new JPanel();
+		centers.setLayout(new GridLayout(1, 3));
+		for (int i = 0; i < 3; i++) {
+			Card panel = new Card(i, list);
+			panel.setName("Center " + i);
+			centers.add(panel);
+			centerCards.add(panel);
+		}
+		add(centers, CircleLayout.CENTER);
+		
 		
 	}
 	
-	public PlayerPanel getPlayer(int i) {
+	public Card getPlayer(int i) {
 		return players.get(i);
 	}
 	
-	public PlayerPanel getCenter(int i) {
-		return centerArea.get(i);
+	public Card getCenter(int i) {
+		return centerCards.get(i);
 	}
 	
 }
