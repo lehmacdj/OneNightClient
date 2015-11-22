@@ -1,6 +1,7 @@
 package main;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,7 +15,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
+import javax.swing.Box;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -35,9 +38,8 @@ public class OneNightWindow {
 	private final int WIDTH  = 1200;
 
 	private PlayArea playArea;
-	private SetList setList;
+	private Box setList;
 	
-	private List<Integer> signal;
 	
 	private boolean running; // true while the window is running
 	
@@ -78,16 +80,23 @@ public class OneNightWindow {
 		
 		frame.setSize(WIDTH, HEIGHT);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		BorderLayout layout = new BorderLayout();
-		frame.setLayout(layout);
 		
 		playArea = new PlayArea(playerCount, roles, HEIGHT, signal);
-		layout.addLayoutComponent(playArea, BorderLayout.WEST);
-		frame.add(playArea);
+		frame.add(playArea, BorderLayout.WEST);
 		
-		setList = new SetList(roles);
-		layout.addLayoutComponent(setList, BorderLayout.EAST);
-		frame.add(setList);
+		setList = Box.createVerticalBox();
+		setList.add(new JLabel("<html><strong>Role Cards in Use</strong></html>"));
+        roles.stream().forEach(r -> {
+            assert r != null;
+            assert r.getName() != null;
+            JLabel label = new JLabel();
+            label.setText(r.getName());
+            label.setPreferredSize(new Dimension(100, 15));
+            setList.add(label);
+        });
+        setList.add(Box.createVerticalGlue());
+		
+		frame.add(setList, BorderLayout.EAST);
 	}
 
 	//updates the window based on the information in this object
@@ -107,15 +116,17 @@ public class OneNightWindow {
 
 		SwingUtilities.invokeLater(() -> frame.setVisible(true));
 		
+		// Begin the response parser
+		new Thread(new ResponseParser(signal));
+		
 		//get the name from the client
 		String raw = JOptionPane.showInputDialog("Input your name");
 		if (!raw.contains(" "))
 			name = raw;
 		while (name == null) {
 			raw = JOptionPane.showInputDialog("Please try again. Names cannot contain spaces.");
-			if (!raw.contains(" ")) {
+			if (!raw.contains(" "))
 				name = raw;
-			}
 		}
 		out.println(uuid + " ready " + name);
 
@@ -143,7 +154,7 @@ public class OneNightWindow {
 	private List<Role> centerCards;
 	private List<Role> roles; //all of the roles in the game
 	private Map<String, Player> players; // the players.  The key is the name, the value is the role
-
+	private List<Integer> signal; // The list that relays the signal to the ResponseParser
 	
 	private void readFromServer() {
 		try {

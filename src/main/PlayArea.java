@@ -46,6 +46,7 @@ public class PlayArea extends JPanel {
 		
 	}
 	
+	/** Returns the player card for the player with index i */
 	public Card getPlayer(int i) {
 		return players.get(i);
 	}

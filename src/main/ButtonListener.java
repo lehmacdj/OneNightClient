@@ -26,10 +26,9 @@ public class ButtonListener implements ActionListener {
 		list.set(index, counter++);
 	}
 
-
-	private static int counter = 0; //the number of times the counter was incremeted
+	private int counter = 0; //the number of times the counter was incremeted
 	
-	public static void reset() {
+	public void reset() {
 		counter = 0;
 	}
 	

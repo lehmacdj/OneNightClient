@@ -7,7 +7,7 @@ public class Player {
 	private Role role;
 	
 	public Player(Role r) {
-		index = nextIndex++;
+		index = nextUsableIndex++;
 		role = r;
 	}
 	
@@ -27,6 +27,6 @@ public class Player {
 		role = r;
 	}
 	
-	private static int nextIndex = 0;
+	private static int nextUsableIndex = 0;
 	
 }
