@@ -97,6 +97,12 @@ public class OneNightWindow {
         setList.add(Box.createVerticalGlue());
 		
 		frame.add(setList, BorderLayout.EAST);
+		
+		//TODO add a status bar at the bottom explaining what the player should do with a few options
+		// as well
+		// ie:
+		// - a button to clear current move
+		// - a button to confirm move
 	}
 
 	//updates the window based on the information in this object
