@@ -21,7 +21,7 @@ public abstract class Role implements Comparable<Role> {
     }
     
     @Override
-	public int compareTo(Role r) {
+    public int compareTo(Role r) {
     	return name.compareTo(r.name);
     }
     
